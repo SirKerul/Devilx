@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevilX Executive Corporate Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- html2canvas and jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        corp: {
+                            navy: '#0b132b',
+                            dark: '#070b19',
+                            card: '#1c2541',
+                            accent: '#3a506b',
+                            blue: '#0066ff',
+                            gold: '#f59e0b',
+                            slate: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #070b19;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-heading {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .corp-card {
+            background: rgba(28, 37, 65, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(7, 11, 25, 0.85) 0%, rgba(7, 11, 25, 0.98) 100%),
+                        url('GDX.png');
+            background-size: cover;
+            background-position: center;
+            z-index: -9;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-hover-effect {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-hover-effect:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        input[type="date"], input[type="time"] {
+            color-scheme: dark;
+            color: #ffffff !important;
+            background-color: #0b132b !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .matrix-white-table {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+        .matrix-white-table th {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border: 1px solid #334155 !important;
+        }
+        .matrix-white-table td {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
+            font-weight: 600;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070b19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2563eb;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f59e0b;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-amber-400 selection:text-black">
+
+    <!-- Background Overlay -->
+    <div class="bg-overlay"></div>
+
+    <!-- Audio Player Core -->
+    <audio id="bgAudio" loop>
+        <source src="DevilX.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Custom Toast Notification -->
+    <div id="notificationToast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-all duration-300 max-w-sm w-full corp-card border-l-4 border-amber-400 p-4 rounded-xl shadow-2xl flex items-center gap-3">
+        <div id="notifIcon" class="text-amber-400 text-xl"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="flex-grow">
+            <h5 id="notifTitle" class="font-heading font-bold text-white text-xs uppercase">Notifikasi</h5>
+            <p id="notifMessage" class="text-[11px] text-gray-300">Mesej sistem...</p>
+        </div>
+        <button onclick="hideNotification()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Modal Butiran Denda Ahli -->
+    <div id="dendaModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 fade-in">
+        <div class="corp-card border border-amber-500/40 rounded-2xl max-w-lg w-full p-6 relative shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-700/60 pb-3 mb-4">
+                <h3 id="modalMemberName" class="text-lg font-heading font-bold text-amber-400">Butiran Mangkir Duty</h3>
+                <button onclick="closeDendaModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-gray-300 mb-3">Senarai tarikh tidak bertugas & tiada kelulusan cuti (Bermula 27.10.2026):</p>
+            <div id="modalDatesList" class="max-h-60 overflow-y-auto space-y-2 pr-1">
+                <!-- Senarai tarikh denda dimuatkan via JS -->
+            </div>
+            <div class="mt-5 pt-3 border-t border-gray-700/60 flex justify-between items-center">
+                <span id="modalTotalFine" class="text-xs font-bold text-red-400">Jumlah: RM 0</span>
+                <button onclick="closeDendaModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs rounded-xl font-heading">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Ahli -->
+    <div id="editStaffModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 fade-in">
+        <div class="corp-card border border-blue-500/40 rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-700/60 pb-3 mb-4">
+                <h3 class="text-base font-heading font-bold text-blue-400"><i class="fa-solid fa-user-pen"></i> Kemaskini Data Anggota</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveEditStaff(event)" class="space-y-3">
+                <input type="hidden" id="editOriginalUsername">
+                <div>
+                    <label class="block text-[11px] font-heading text-gray-300 mb-1">Nama Penuh</label>
+                    <input type="text" id="editStaffName" required class="w-full p-2.5 bg-slate-900 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-heading text-gray-300 mb-1">Username Log Masuk</label>
+                    <input type="text" id="editStaffUsername" required class="w-full p-2.5 bg-slate-900 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-heading text-gray-300 mb-1">Password</label>
+                    <input type="text" id="editStaffPassword" required class="w-full p-2.5 bg-slate-900 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-heading text-amber-400 font-bold mb-1 uppercase">Peranan / Role Access:</label>
+                    <div class="flex gap-4 text-xs text-gray-200 bg-slate-900 p-2.5 rounded-xl border border-gray-800">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="editRoleAhli" class="accent-blue-500 rounded">
+                            <span>Ahli Biasa</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="editRoleHighTable" class="accent-amber-400 rounded">
+                            <span class="text-amber-400 font-bold">HighTable</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-800 text-gray-300 rounded-xl text-xs font-heading">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-heading font-bold btn-hover-effect">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header Navbar -->
+    <header class="w-full border-b border-gray-800/80 bg-corp-dark/95 backdrop-blur-md py-3.5 px-6 relative z-10">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl border border-amber-400/50 bg-black flex items-center justify-center p-1 shadow-md">
+                    <img src="LogoDX.jpg" alt="DevilX Logo" class="w-full h-full object-cover rounded-lg" onerror="this.src='https://placehold.co/100x100/0c0f1d/fbbf24?text=DX'">
+                </div>
+                <div>
+                    <h1 class="text-base md:text-lg font-extrabold font-heading text-amber-400 uppercase tracking-wide">DevilX Portal</h1>
+                    <p class="text-[10px] text-blue-400 tracking-widest font-mono uppercase">// Corporate Command Center //</p>
+                </div>
+            </div>
+
+            <div id="navUserArea" class="hidden flex items-center gap-3">
+                <button onclick="switchAhliSubView('profil')" class="px-3 py-1.5 corp-card hover:bg-slate-800 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-heading flex items-center gap-2 btn-hover-effect">
+                    <i class="fa-solid fa-user-gear"></i>
+                    <span id="navUsernameBadge">@user</span>
+                </button>
+                <button onclick="logout()" class="px-3 py-1.5 bg-red-950/60 hover:bg-red-800 border border-red-500/40 text-white rounded-xl text-xs font-heading btn-hover-effect">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main id="mainContainerWrapper" class="flex-grow flex flex-col items-center justify-center px-4 py-6 relative z-10 max-w-7xl mx-auto w-full transition-all duration-300">
+
+        <!-- Central Card Container dengan DXVideo.mp4 Video Background -->
+        <div id="cardWrapperBox" class="relative w-full max-w-xl rounded-2xl overflow-hidden corp-card border border-blue-500/30 shadow-2xl transition-all duration-300">
+            
+            <!-- Video DXVideo.mp4 Background untuk Panel Menu -->
+            <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <video autoplay muted loop playsinline class="w-full h-full object-cover filter brightness-[0.35] contrast-125 scale-105" onerror="this.style.display='none';">
+                    <source src="DXVideo.mp4" type="video/mp4">
+                </video>
+                <div class="absolute inset-0 bg-gradient-to-b from-corp-dark/70 via-corp-card/80 to-corp-dark/90"></div>
+            </div>
+
+            <div class="relative z-10 p-6 md:p-8">
+
+                <!-- 1. LOGIN VIEW -->
+                <div id="loginView" class="fade-in max-w-sm mx-auto">
+                    <div class="text-center mb-6">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-950/60 border border-blue-500/40 text-amber-400 flex items-center justify-center text-xl mx-auto mb-3 shadow-lg">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="text-xl font-heading font-bold text-white uppercase tracking-wider">Log Masuk Executive</h3>
+                        <p class="text-xs text-gray-400 mt-1">Masukkan akaun berdaftar anda.</p>
+                    </div>
+                    
+                    <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-heading text-gray-300 uppercase mb-1">Username</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-400 text-xs"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" id="loginUsername" required placeholder="Masukkan Username..." class="w-full pl-9 pr-4 py-2.5 bg-black/70 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 text-xs">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-heading text-gray-300 uppercase mb-1">Password</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-400 text-xs"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="loginPassword" required placeholder="Masukkan Password..." class="w-full pl-9 pr-4 py-2.5 bg-black/70 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 text-xs">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs text-gray-400 pt-1">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="rememberMe" class="accent-amber-400 rounded">
+                                <span>Ingat Sesi Log Masuk</span>
+                            </label>
+                            <button type="button" onclick="fetchFromFirebase(true)" class="text-xs text-amber-400 hover:underline flex items-center gap-1">
+                                <i class="fa-solid fa-rotate"></i> Sync Data
+                            </button>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 bg-gradient-to-r from-blue-600 via-blue-500 to-amber-500 text-black font-heading font-bold uppercase rounded-xl btn-hover-effect text-xs tracking-wider shadow-lg">
+                            Masuk Sistem
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 2. AHLI DASHBOARD -->
+                <div id="ahliDashboard" class="hidden fade-in w-full">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-gray-700/60 pb-4 gap-3">
+                        <div>
+                            <h3 class="text-xl font-heading font-bold text-amber-400 flex items-center gap-2">
+                                <i class="fa-solid fa-gauge-high"></i> Executive Panel
+                            </h3>
+                            <p class="text-xs text-gray-400">Pengurusan tugasan, cuti & akaun anda.</p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                        <button onclick="switchAhliSubView('cuti')" class="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-blue-600/30 text-left btn-hover-effect">
+                            <div class="text-amber-400 text-lg mb-1"><i class="fa-solid fa-calendar-plus"></i></div>
+                            <h4 class="font-bold font-heading text-white text-xs">Permohonan Cuti</h4>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Mohon pelepasan.</p>
+                        </button>
+                        <button onclick="switchAhliSubView('logduty')" class="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-blue-600/30 text-left btn-hover-effect">
+                            <div class="text-amber-400 text-lg mb-1"><i class="fa-solid fa-clipboard-user"></i></div>
+                            <h4 class="font-bold font-heading text-white text-xs">Laporan Duty</h4>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Hantar log harian.</p>
+                        </button>
+                        <button onclick="switchAhliSubView('semakanlog')" class="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-blue-600/30 text-left btn-hover-effect">
+                            <div class="text-amber-400 text-lg mb-1"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                            <h4 class="font-bold font-heading text-white text-xs">Rekod Saya</h4>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Status duty & cuti.</p>
+                        </button>
+                        <button onclick="switchAhliSubView('profil')" class="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-amber-500/40 text-left btn-hover-effect">
+                            <div class="text-amber-400 text-lg mb-1"><i class="fa-solid fa-user-gear"></i></div>
+                            <h4 class="font-bold font-heading text-amber-400 text-xs">Tetapan Profil</h4>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Tukar pass / user.</p>
+                        </button>
+                    </div>
+
+                    <div id="htPortalAccessBtnWrapper" class="mb-6 hidden">
+                        <button onclick="accessHighTableMenu()" class="w-full p-4 rounded-xl bg-gradient-to-r from-amber-950/70 via-black to-blue-950/70 border border-amber-500/50 text-left btn-hover-effect flex items-center justify-between shadow-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg"><i class="fa-solid fa-chess-king"></i></div>
+                                <div>
+                                    <h4 class="font-bold font-heading text-amber-400 text-sm">Akses Portal HighTable</h4>
+                                    <p class="text-[11px] text-gray-300">Pengurusan organisasi, matrik & denda anggota.</p>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-amber-400"></i>
+                        </button>
+                    </div>
+
+                    <!-- Ahli Sub Views -->
+                    <!-- 1. Permohonan Cuti -->
+                    <div id="ahliSubCuti" class="hidden bg-slate-900/90 border border-gray-700/60 p-5 rounded-2xl">
+                        <h4 class="font-heading font-bold text-amber-400 mb-4 flex items-center gap-2 text-xs"><i class="fa-solid fa-calendar-plus"></i> Borang Permohonan Cuti</h4>
+                        <form onsubmit="submitCuti(event)" class="space-y-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-heading text-gray-300 mb-1">Tarikh Mula Cuti</label>
+                                    <input type="date" id="cutiStart" required onchange="calculateLeaveDays()" class="w-full p-2.5 rounded-xl text-white text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-heading text-gray-300 mb-1">Tarikh Akhir Cuti</label>
+                                    <input type="date" id="cutiEnd" required onchange="calculateLeaveDays()" class="w-full p-2.5 rounded-xl text-white text-xs">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-heading text-gray-300 mb-1">Jumlah Hari Cuti (Automatik)</label>
+                                <input type="text" id="cutiTotalDays" readonly value="0 Hari" class="w-full p-2 bg-blue-950/40 border border-blue-900/60 rounded-xl text-amber-400 font-bold text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-heading text-gray-300 mb-1">Sebab Cuti</label>
+                                <textarea id="cutiReason" rows="2" required placeholder="Nyatakan sebab permohonan..." class="w-full p-2.5 bg-black/80 border border-gray-800 rounded-xl text-white text-xs"></textarea>
+                            </div>
+                            <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 font-heading font-bold text-white rounded-xl text-xs uppercase tracking-wider btn-hover-effect">Hantar Permohonan</button>
+                        </form>
+                    </div>
+
+                    <!-- 2. Laporan Duty -->
+                    <div id="ahliSubLogDuty" class="hidden bg-slate-900/90 border border-gray-700/60 p-5 rounded-2xl">
+                        <h4 class="font-heading font-bold text-amber-400 mb-4 flex items-center gap-2 text-xs"><i class="fa-solid fa-file-pen"></i> Hantar Laporan Log Duty</h4>
+                        <form onsubmit="submitDuty(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-heading text-gray-300 mb-1">Tarikh Duty</label>
+                                <input type="date" id="dutyDate" required class="w-full p-2.5 rounded-xl text-white text-xs">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-heading text-gray-300 mb-1">Masa Duty (Mula)</label>
+                                    <input type="time" id="dutyTimeStart" required class="w-full p-2.5 rounded-xl text-white text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-heading text-gray-300 mb-1">Masa Off Duty (Tamat)</label>
+                                    <input type="time" id="dutyTimeEnd" required class="w-full p-2.5 rounded-xl text-white text-xs">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-heading text-gray-300 mb-1">Aktiviti / Sektor Tugas</label>
+                                <textarea id="dutyActivity" rows="2" required placeholder="Perincikan aktiviti anda..." class="w-full p-2.5 bg-black/80 border border-gray-800 rounded-xl text-white text-xs"></textarea>
+                            </div>
+                            <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 font-heading font-bold text-white rounded-xl text-xs uppercase tracking-wider btn-hover-effect">Hantar Log Duty</button>
+                        </form>
+                    </div>
+
+                    <!-- 3. Semakan Log -->
+                    <div id="ahliSubSemakanLog" class="hidden bg-slate-900/90 border border-gray-700/60 p-5 rounded-2xl">
+                        <h4 class="font-heading font-bold text-amber-400 mb-4 flex items-center gap-2 text-xs"><i class="fa-solid fa-clock-rotate-left"></i> Rekod Log Duty & Cuti Peribadi</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-gray-200">
+                                <thead class="bg-blue-950/80 text-amber-400 font-heading">
+                                    <tr>
+                                        <th class="p-2.5">Jenis</th>
+                                        <th class="p-2.5">Tarikh / Masa</th>
+                                        <th class="p-2.5">Butiran / Sebab</th>
+                                        <th class="p-2.5">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myLogsTableBody" class="divide-y divide-gray-800/60">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 4. Kemaskini Profil (Tukar Username & Password) -->
+                    <div id="ahliSubProfil" class="hidden bg-slate-900/90 border border-amber-500/30 p-5 rounded-2xl">
+                        <h4 class="font-heading font-bold text-amber-400 mb-4 flex items-center gap-2 text-xs"><i class="fa-solid fa-user-gear"></i> Kemaskini Profil & Kredensial Akaun</h4>
+                        <form onsubmit="updateUserProfile(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-heading text-gray-300 mb-1">Nama Penuh</label>
+                                <input type="text" id="profileName" required class="w-full p-2.5 bg-black/80 border border-gray-800 rounded-xl text-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-heading text-gray-300 mb-1">Username Baru</label>
+                                <input type="text" id="profileUsername" required class="w-full p-2.5 bg-black/80 border border-gray-800 rounded-xl text-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-heading text-gray-300 mb-1">Password Baru</label>
+                                <input type="password" id="profilePassword" required class="w-full p-2.5 bg-black/80 border border-gray-800 rounded-xl text-white text-xs">
+                            </div>
+                            <button type="submit" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-heading font-bold rounded-xl text-xs uppercase tracking-wider btn-hover-effect">Kemaskini Akaun Saya</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 3. HIGHTABLE DASHBOARD -->
+                <div id="hightableDashboard" class="hidden fade-in w-full">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-gray-700/60 pb-4 gap-3">
+                        <div>
+                            <h3 class="text-xl font-heading font-bold text-amber-400 flex items-center gap-2">
+                                <i class="fa-solid fa-chess-king"></i> Majlis Tinggi HighTable
+                            </h3>
+                            <p class="text-xs text-gray-400">Portal Pengurusan Tertinggi Organization.</p>
+                        </div>
+                        <button onclick="exitHighTableToAhli()" class="px-3 py-1.5 corp-card text-blue-300 border border-blue-500/30 rounded-xl text-xs font-heading btn-hover-effect flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-left"></i> Panel Executive
+                        </button>
+                    </div>
+
+                    <!-- Sub Menu HighTable Nav Grid -->
+                    <div id="htMainMenu" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6">
+                        <button onclick="switchHighTableSubView('semakduty')" class="p-5 rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-amber-500/30 text-left btn-hover-effect flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl"><i class="fa-solid fa-clipboard-list"></i></div>
+                            <div>
+                                <h4 class="font-bold font-heading text-white text-sm">Semak Log Duty</h4>
+                                <p class="text-xs text-gray-400 mt-0.5">Semak & urus laporan tugas.</p>
+                            </div>
+                        </button>
+                        <button onclick="switchHighTableSubView('semakcuti')" class="p-5 rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-amber-500/30 text-left btn-hover-effect flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-check"></i></div>
+                            <div>
+                                <h4 class="font-bold font-heading text-white text-sm">Semak Permohonan Cuti</h4>
+                                <p class="text-xs text-gray-400 mt-0.5">Kelulusan cuti anggota.</p>
+                            </div>
+                        </button>
+                        <button onclick="switchHighTableSubView('matrix')" class="p-5 rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-amber-500/30 text-left btn-hover-effect flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl"><i class="fa-solid fa-table-cells"></i></div>
+                            <div>
+                                <h4 class="font-bold font-heading text-white text-sm">Jadual Matrik</h4>
+                                <p class="text-xs text-gray-400 mt-0.5">Paparan nama & eksport kalendar.</p>
+                            </div>
+                        </button>
+                        <button onclick="switchHighTableSubView('urusahli')" class="p-5 rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-amber-500/30 text-left btn-hover-effect flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl"><i class="fa-solid fa-users-gear"></i></div>
+                            <div>
+                                <h4 class="font-bold font-heading text-white text-sm">Urus Ahli</h4>
+                                <p class="text-xs text-gray-400 mt-0.5">Tambah, edit & padam akaun.</p>
+                            </div>
+                        </button>
+                        <button onclick="switchHighTableSubView('dendaahli')" class="p-5 rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-red-500/40 text-left btn-hover-effect flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div>
+                                <h4 class="font-bold font-heading text-white text-sm">Denda Ahli</h4>
+                                <p class="text-xs text-gray-400 mt-0.5">Semakan tarikh denda mengikut nama.</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div id="htSubContentContainer" class="hidden">
+                        <button onclick="backToHTMainMenu()" class="mb-4 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-xl text-xs font-heading btn-hover-effect flex items-center gap-2 border border-amber-500/30">
+                            <i class="fa-solid fa-arrow-left"></i> Menu Utama HighTable
+                        </button>
+
+                        <!-- HT Sub 1: Semak Duty -->
+                        <div id="htSubSemakDuty" class="hidden bg-slate-900/90 border border-gray-700/60 p-6 rounded-2xl">
+                            <h4 class="font-heading font-bold text-amber-400 mb-4 flex items-center gap-2 text-xs"><i class="fa-solid fa-clipboard-list"></i> Senarai Log Duty Anggota</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-gray-200">
+                                    <thead class="bg-amber-950/80 text-amber-400 font-heading">
+                                        <tr>
+                                            <th class="p-3">Nama Ahli</th>
+                                            <th class="p-3">Tarikh</th>
+                                            <th class="p-3">Masa Duty</th>
+                                            <th class="p-3">Aktiviti</th>
+                                            <th class="p-3">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="htDutyTableBody" class="divide-y divide-gray-800/60">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- HT Sub 2: Semak Cuti -->
+                        <div id="htSubSemakCuti" class="hidden bg-slate-900/90 border border-gray-700/60 p-6 rounded-2xl">
+                            <h4 class="font-heading font-bold text-amber-400 mb-4 flex items-center gap-2 text-xs"><i class="fa-solid fa-calendar-check"></i> Kelulusan Permohonan Cuti</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-gray-200">
+                                    <thead class="bg-amber-950/80 text-amber-400 font-heading">
+                                        <tr>
+                                            <th class="p-3">Nama Ahli</th>
+                                            <th class="p-3">Tempoh Cuti</th>
+                                            <th class="p-3">Sebab</th>
+                                            <th class="p-3">Status</th>
+                                            <th class="p-3">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="htCutiTableBody" class="divide-y divide-gray-800/60">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- HT Sub 3: Jadual Matrik (Menggunakan NAMA) -->
+                        <div id="htSubMatrix" class="hidden bg-slate-900/90 border border-gray-700/60 p-6 rounded-2xl">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                                <h4 class="font-heading font-bold text-amber-400 flex items-center gap-2 text-xs"><i class="fa-solid fa-table-cells"></i> Jadual Matrik Tugasan & Cuti Anggota</h4>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <select id="matrixYear" onchange="renderMatrixCalendar()" class="bg-black border border-gray-700 text-amber-400 text-xs rounded-xl px-2.5 py-1.5 font-mono">
+                                    </select>
+                                    <select id="matrixMonth" onchange="renderMatrixCalendar()" class="bg-black border border-gray-700 text-amber-400 text-xs rounded-xl px-2.5 py-1.5 font-mono">
+                                        <option value="1">Januari</option>
+                                        <option value="2">Februari</option>
+                                        <option value="3">Mac</option>
+                                        <option value="4">April</option>
+                                        <option value="5">Mei</option>
+                                        <option value="6">Jun</option>
+                                        <option value="7">Julai</option>
+                                        <option value="8">Ogos</option>
+                                        <option value="9">September</option>
+                                        <option value="10" selected>Oktober</option>
+                                        <option value="11">November</option>
+                                        <option value="12">Disember</option>
+                                    </select>
+                                    <button onclick="exportMatrix('png')" class="px-3 py-1.5 bg-amber-500 text-black font-heading font-bold rounded-xl text-xs btn-hover-effect">PNG</button>
+                                    <button onclick="exportMatrix('pdf')" class="px-3 py-1.5 bg-blue-600 text-white font-heading font-bold rounded-xl text-xs btn-hover-effect">PDF</button>
+                                </div>
+                            </div>
+
+                            <div id="matrixExportContainer" class="bg-white p-4 rounded-xl overflow-x-auto shadow-inner border border-gray-300">
+                                <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-300">
+                                    <h5 id="matrixTitleHeader" class="font-heading font-bold text-gray-900 text-xs uppercase tracking-wider">MATRIK TUGAS & CUTI</h5>
+                                    <span class="text-[10px] text-blue-900 font-mono font-bold">DEVILX HIGH COMMAND</span>
+                                </div>
+                                <table class="w-full text-left text-xs border-collapse min-w-[900px] matrix-white-table">
+                                    <thead id="matrixTableHeader">
+                                    </thead>
+                                    <tbody id="matrixTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- HT Sub 4: Urus Ahli (Boleh Edit & Padam Semua Akaun) -->
+                        <div id="htSubUrusAhli" class="hidden bg-slate-900/90 border border-gray-700/60 p-6 rounded-2xl">
+                            <h4 class="font-heading font-bold text-amber-400 mb-4 flex items-center gap-2 text-xs"><i class="fa-solid fa-users-gear"></i> Pengurusan & Pendaftaran Anggota</h4>
+                            
+                            <form onsubmit="addNewStaff(event)" class="mb-6 bg-black/80 border border-gray-800 p-4 rounded-xl space-y-3">
+                                <h5 class="font-heading font-bold text-white text-xs uppercase text-amber-400">Tambah Ahli Baharu</h5>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] text-gray-300 mb-1">Nama Penuh</label>
+                                        <input type="text" id="newStaffName" required placeholder="Cth: John Doe" class="w-full p-2.5 bg-black border border-gray-700 rounded-xl text-xs text-white">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] text-gray-300 mb-1">Username</label>
+                                        <input type="text" id="newStaffUsername" required placeholder="Cth: john" class="w-full p-2.5 bg-black border border-gray-700 rounded-xl text-xs text-white">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] text-gray-300 mb-1">Password</label>
+                                        <input type="password" id="newStaffPassword" required placeholder="Cth: 123" class="w-full p-2.5 bg-black border border-gray-700 rounded-xl text-xs text-white">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-[11px] text-amber-400 font-bold mb-1 uppercase">Peranan / Role Access:</label>
+                                    <div class="flex gap-4 text-xs text-gray-200 bg-black/50 p-2.5 rounded-xl border border-gray-800">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" id="roleAhli" checked class="accent-blue-500 rounded">
+                                            <span>Ahli Biasa</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" id="roleHighTable" class="accent-amber-400 rounded">
+                                            <span class="text-amber-400 font-bold">HighTable</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-heading font-bold rounded-xl text-xs btn-hover-effect">Daftar Ahli</button>
+                            </form>
+
+                            <h5 class="font-heading font-bold text-white text-xs uppercase mb-3">Senarai Anggota Berdaftar</h5>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-gray-200">
+                                    <thead class="bg-amber-950/80 text-amber-400 font-heading">
+                                        <tr>
+                                            <th class="p-3">Nama Penuh</th>
+                                            <th class="p-3">Username</th>
+                                            <th class="p-3">Password</th>
+                                            <th class="p-3">Peranan</th>
+                                            <th class="p-3">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="staffTableBody" class="divide-y divide-gray-800/60">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- HT Sub 5: Denda Ahli (Nama & Tarikh Denda bermula 27.10.2026 - Auto Delete jika Lunas) -->
+                        <div id="htSubDendaAhli" class="hidden bg-slate-900/90 border border-red-900/40 p-6 rounded-2xl">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-heading font-bold text-red-400 flex items-center gap-2 text-xs">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Rekod Denda Mangkir Duty (RM1000/Hari - Bermula 27.10.2026)
+                                </h4>
+                                <button onclick="triggerDendaRefresh()" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs btn-hover-effect flex items-center gap-1 font-heading">
+                                    <i class="fa-solid fa-rotate"></i> Kemaskini Denda
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-4">Klik NAMA ahli untuk melihat senarai tarikh mangkir. Tekan 'Lunas' untuk memadam rekod tarikh berkenaan secara automatik.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="dendaMembersGrid">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Controller -->
+    <footer class="w-full bg-corp-dark/95 border-t border-gray-800 py-3 px-6 relative z-20 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <button id="playPauseBtn" onclick="togglePlay()" class="w-9 h-9 rounded-xl bg-gradient-to-r from-blue-600 to-amber-500 text-black flex items-center justify-center text-sm font-bold btn-hover-effect shadow-md">
+                    <i id="playIcon" class="fa-solid fa-play ml-0.5"></i>
+                </button>
+                <div>
+                    <div class="text-xs font-bold text-amber-400 font-heading flex items-center gap-2">
+                        <span>DevilX Anthem</span>
+                        <span class="inline-block w-2 h-2 rounded-full bg-red-500" id="audioIndicator"></span>
+                    </div>
+                    <div class="text-[10px] text-gray-400">Audio System Core</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 w-full md:w-1/3">
+                <span id="currentTime" class="text-[10px] text-gray-400 font-mono">0:00</span>
+                <div class="flex-grow bg-gray-800 h-1.5 rounded-full overflow-hidden cursor-pointer relative" id="progressBarContainer" onclick="seekAudio(event)">
+                    <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-amber-400 h-full w-0"></div>
+                </div>
+                <span id="durationTime" class="text-[10px] text-gray-400 font-mono">0:00</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="toggleMute()" class="text-amber-400 hover:text-white text-sm">
+                    <i id="volumeIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.7" oninput="changeVolume(this.value)" class="w-20 accent-amber-400 cursor-pointer">
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Core -->
+    <script>
+        // FIREBASE REALTIME DATABASE URL
+        const FIREBASE_DB_URL = "https://devilx-de242-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
+        let appData = {
+            staffs: JSON.parse(localStorage.getItem('devilx_staffs')) || [
+                { name: 'HighTable Boss', username: 'hightableboss', password: '123', roles: ['ahli', 'hightable'] },
+                { name: 'Boss Utama', username: 'boss', password: '123', roles: ['ahli', 'hightable'] }
+            ],
+            duties: JSON.parse(localStorage.getItem('devilx_duties')) || [],
+            leaves: JSON.parse(localStorage.getItem('devilx_leaves')) || [],
+            fines: JSON.parse(localStorage.getItem('devilx_fines')) || []
+        };
+
+        let currentLoggedInUser = null;
+
+        function cleanupOrphanedData() {
+            const validUsernames = appData.staffs.map(s => String(s.username).trim().toLowerCase());
+            appData.duties = appData.duties.filter(d => validUsernames.includes(String(d.user).trim().toLowerCase()));
+            appData.leaves = appData.leaves.filter(l => validUsernames.includes(String(l.user).trim().toLowerCase()));
+            appData.fines = appData.fines.filter(f => validUsernames.includes(String(f.user).trim().toLowerCase()));
+            saveDataLocally();
+        }
+
+        function saveDataLocally() {
+            localStorage.setItem('devilx_staffs', JSON.stringify(appData.staffs));
+            localStorage.setItem('devilx_duties', JSON.stringify(appData.duties));
+            localStorage.setItem('devilx_leaves', JSON.stringify(appData.leaves));
+            localStorage.setItem('devilx_fines', JSON.stringify(appData.fines));
+        }
+
+        // Simpan Data ke Firebase Database
+        async function syncWithFirebase() {
+            try {
+                await fetch(`${FIREBASE_DB_URL}appData.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appData)
+                });
+            } catch (err) {
+                console.error("Gagal menyinkronkan data ke Firebase:", err);
+            }
+        }
+
+        // Ambil Data Terkini dari Firebase Database
+        async function fetchFromFirebase(showToast = false) {
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}appData.json`);
+                if (!res.ok) throw new Error("Gagal membaca Firebase");
+                const result = await res.json();
+                
+                if (result) {
+                    if (result.staffs && Array.isArray(result.staffs)) {
+                        appData.staffs = result.staffs.map(staff => ({
+                            name: String(staff.name || '').trim(),
+                            username: String(staff.username || '').trim().toLowerCase(),
+                            password: String(staff.password || '').trim(),
+                            roles: Array.isArray(staff.roles) ? staff.roles : ['ahli']
+                        }));
+                    }
+                    appData.duties = result.duties || [];
+                    appData.leaves = result.leaves || [];
+                    appData.fines  = result.fines || [];
+
+                    saveDataLocally();
+                    refreshAllUI();
+
+                    if (showToast) {
+                        showNotification('Sync Berjaya', 'Data terkemaskini dari pangkalan data Firebase.');
+                    }
+                } else {
+                    await syncWithFirebase();
+                }
+            } catch (err) {
+                console.warn("Gagal membaca Firebase, menggunakan simpanan tempatan:", err);
+                if (showToast) {
+                    showNotification('Sync Ralat', 'Gagal berhubung dengan Firebase.', true);
+                }
+            }
+        }
+
+        function saveData() {
+            saveDataLocally();
+            syncWithFirebase();
+        }
+
+        function refreshAllUI() {
+            if (currentLoggedInUser) {
+                document.getElementById('navUsernameBadge').textContent = `@${currentLoggedInUser.username}`;
+                document.getElementById('profileName').value = currentLoggedInUser.name;
+                document.getElementById('profileUsername').value = currentLoggedInUser.username;
+                document.getElementById('profilePassword').value = currentLoggedInUser.password;
+                renderMyLogs(currentLoggedInUser.username);
+            }
+            renderHighTableTables();
+            renderStaffTable();
+            renderMatrixCalendar();
+            renderDendaGrid();
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const yearSelect = document.getElementById('matrixYear');
+            for (let y = 2026; y <= 2099; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                if (y === 2026) opt.selected = true;
+                yearSelect.appendChild(opt);
+            }
+
+            const savedVolume = localStorage.getItem('devilx_volume');
+            const audio = document.getElementById('bgAudio');
+            if (savedVolume !== null) {
+                audio.volume = parseFloat(savedVolume);
+                document.getElementById('volumeSlider').value = savedVolume;
+            }
+
+            await fetchFromFirebase();
+
+            const savedUser = localStorage.getItem('devilx_current_user');
+            if (savedUser) {
+                const foundStaff = appData.staffs.find(s => s.username.toLowerCase() === savedUser.toLowerCase());
+                if (foundStaff) {
+                    loginSuccess(foundStaff, false);
+                }
+            }
+        });
+
+        // KIRAAN DENDA MANGKIR DUTY BERMULA 27.10.2026 (RM1000 PER HARI)
+        function generateAutomaticFines() {
+            const startDate = new Date('2026-10-27');
+            const today = new Date();
+            if (today < startDate) return;
+
+            appData.staffs.forEach(staff => {
+                if (staff.roles && staff.roles.includes('hightable') && !staff.roles.includes('ahli')) return;
+
+                let curr = new Date(startDate);
+                while (curr <= today) {
+                    const year = curr.getFullYear();
+                    const month = String(curr.getMonth() + 1).padStart(2, '0');
+                    const day = String(curr.getDate()).padStart(2, '0');
+                    const dateStr = `${year}-${month}-${day}`;
+
+                    const hasDuty = appData.duties.some(d => String(d.user).toLowerCase() === staff.username && d.date === dateStr);
+                    const hasLeave = appData.leaves.some(l => String(l.user).toLowerCase() === staff.username && l.status === 'Diluluskan' && dateStr >= l.start && dateStr <= l.end);
+
+                    if (!hasDuty && !hasLeave) {
+                        const exists = appData.fines.some(f => String(f.user).toLowerCase() === staff.username && f.date === dateStr);
+                        if (!exists) {
+                            appData.fines.push({
+                                id: Date.now() + Math.random(),
+                                user: staff.username,
+                                date: dateStr,
+                                amount: 1000,
+                                status: 'Belum Bayar'
+                            });
+                        }
+                    }
+                    curr.setDate(curr.getDate() + 1);
+                }
+            });
+            saveDataLocally();
+        }
+
+        function showNotification(title, message, isError = false) {
+            const toast = document.getElementById('notificationToast');
+            document.getElementById('notifTitle').textContent = title;
+            document.getElementById('notifMessage').textContent = message;
+            const notifIcon = document.getElementById('notifIcon');
+
+            if (isError) {
+                notifIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i>';
+                toast.style.borderColor = '#ef4444';
+            } else {
+                notifIcon.innerHTML = '<i class="fa-solid fa-circle-check text-amber-400"></i>';
+                toast.style.borderColor = '#fbbf24';
+            }
+
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => { hideNotification(); }, 3500);
+        }
+
+        function hideNotification() {
+            document.getElementById('notificationToast').classList.add('translate-x-full');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const passwordInput = document.getElementById('loginPassword').value.trim();
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            const staff = appData.staffs.find(s => String(s.username).toLowerCase() === usernameInput && String(s.password) === passwordInput);
+
+            if (!staff) {
+                showNotification('Log Masuk Gagal', 'Username atau password tidak betul!', true);
+                return;
+            }
+
+            if (rememberMe) {
+                localStorage.setItem('devilx_current_user', staff.username);
+            }
+            loginSuccess(staff, true);
+        }
+
+        function loginSuccess(staff, showWelcome = true) {
+            currentLoggedInUser = staff;
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('hightableDashboard').classList.add('hidden');
+            document.getElementById('navUserArea').classList.remove('hidden');
+
+            const cardWrapperBox = document.getElementById('cardWrapperBox');
+            cardWrapperBox.className = "relative w-full max-w-xl rounded-2xl overflow-hidden corp-card border border-blue-500/30 shadow-2xl transition-all duration-300";
+
+            document.getElementById('ahliDashboard').classList.remove('hidden');
+            document.getElementById('navUsernameBadge').textContent = `@${staff.username}`;
+
+            const isHT = staff.roles && staff.roles.includes('hightable');
+            if (isHT) {
+                document.getElementById('htPortalAccessBtnWrapper').classList.remove('hidden');
+            } else {
+                document.getElementById('htPortalAccessBtnWrapper').classList.add('hidden');
+            }
+
+            switchAhliSubView('cuti');
+            refreshAllUI();
+
+            if (showWelcome) {
+                showNotification('Selamat Datang', `Log masuk berjaya sebagai ${staff.name}.`);
+            }
+        }
+
+        function accessHighTableMenu() {
+            if (!currentLoggedInUser || !currentLoggedInUser.roles || !currentLoggedInUser.roles.includes('hightable')) {
+                showNotification('Akses Ditolak', 'Hanya role HighTable dibenarkan!', true);
+                return;
+            }
+
+            document.getElementById('ahliDashboard').classList.add('hidden');
+            document.getElementById('hightableDashboard').classList.remove('hidden');
+
+            const cardWrapperBox = document.getElementById('cardWrapperBox');
+            cardWrapperBox.className = "relative w-full rounded-2xl overflow-hidden corp-card border border-amber-500/40 shadow-2xl transition-all duration-300";
+
+            backToHTMainMenu();
+            renderHighTableTables();
+            renderStaffTable();
+            renderMatrixCalendar();
+            generateAutomaticFines();
+            renderDendaGrid();
+        }
+
+        function exitHighTableToAhli() {
+            document.getElementById('hightableDashboard').classList.add('hidden');
+            loginSuccess(currentLoggedInUser, false);
+        }
+
+        function logout() {
+            localStorage.removeItem('devilx_current_user');
+            currentLoggedInUser = null;
+            document.getElementById('ahliDashboard').classList.add('hidden');
+            document.getElementById('hightableDashboard').classList.add('hidden');
+            document.getElementById('navUserArea').classList.add('hidden');
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+
+            const cardWrapperBox = document.getElementById('cardWrapperBox');
+            cardWrapperBox.className = "relative w-full max-w-xl rounded-2xl overflow-hidden corp-card border border-blue-500/30 shadow-2xl transition-all duration-300";
+
+            showNotification('Log Keluar', 'Anda telah keluar dari sistem.');
+        }
+
+        function switchAhliSubView(sub) {
+            document.getElementById('ahliSubCuti').classList.add('hidden');
+            document.getElementById('ahliSubLogDuty').classList.add('hidden');
+            document.getElementById('ahliSubSemakanLog').classList.add('hidden');
+            document.getElementById('ahliSubProfil').classList.add('hidden');
+
+            if (sub === 'cuti') document.getElementById('ahliSubCuti').classList.remove('hidden');
+            else if (sub === 'logduty') document.getElementById('ahliSubLogDuty').classList.remove('hidden');
+            else if (sub === 'semakanlog') {
+                document.getElementById('ahliSubSemakanLog').classList.remove('hidden');
+                renderMyLogs(currentLoggedInUser.username);
+            }
+            else if (sub === 'profil') {
+                document.getElementById('ahliSubProfil').classList.remove('hidden');
+                document.getElementById('profileName').value = currentLoggedInUser.name;
+                document.getElementById('profileUsername').value = currentLoggedInUser.username;
+                document.getElementById('profilePassword').value = currentLoggedInUser.password;
+            }
+        }
+
+        function switchHighTableSubView(sub) {
+            document.getElementById('htMainMenu').classList.add('hidden');
+            document.getElementById('htSubContentContainer').classList.remove('hidden');
+
+            document.getElementById('htSubSemakDuty').classList.add('hidden');
+            document.getElementById('htSubSemakCuti').classList.add('hidden');
+            document.getElementById('htSubMatrix').classList.add('hidden');
+            document.getElementById('htSubUrusAhli').classList.add('hidden');
+            document.getElementById('htSubDendaAhli').classList.add('hidden');
+
+            if (sub === 'semakduty') {
+                document.getElementById('htSubSemakDuty').classList.remove('hidden');
+                renderHighTableTables();
+            } else if (sub === 'semakcuti') {
+                document.getElementById('htSubSemakCuti').classList.remove('hidden');
+                renderHighTableTables();
+            } else if (sub === 'matrix') {
+                document.getElementById('htSubMatrix').classList.remove('hidden');
+                renderMatrixCalendar();
+            } else if (sub === 'urusahli') {
+                document.getElementById('htSubUrusAhli').classList.remove('hidden');
+                renderStaffTable();
+            } else if (sub === 'dendaahli') {
+                document.getElementById('htSubDendaAhli').classList.remove('hidden');
+                renderDendaGrid();
+            }
+        }
+
+        function backToHTMainMenu() {
+            document.getElementById('htSubContentContainer').classList.add('hidden');
+            document.getElementById('htMainMenu').classList.remove('hidden');
+        }
+
+        // FUNGSI TUKAR USERNAME & PASSWORD PADA PROFIL
+        function updateUserProfile(e) {
+            e.preventDefault();
+            const newName = document.getElementById('profileName').value.trim();
+            const newUsername = document.getElementById('profileUsername').value.trim().toLowerCase();
+            const newPassword = document.getElementById('profilePassword').value.trim();
+
+            if (newUsername !== currentLoggedInUser.username && appData.staffs.some(s => s.username === newUsername)) {
+                showNotification('Ralat', 'Username tersebut sudah digunakan oleh ahli lain!', true);
+                return;
+            }
+
+            const oldUsername = currentLoggedInUser.username;
+
+            const staff = appData.staffs.find(s => s.username === oldUsername);
+            if (staff) {
+                staff.name = newName;
+                staff.username = newUsername;
+                staff.password = newPassword;
+            }
+
+            if (oldUsername !== newUsername) {
+                appData.duties.forEach(d => { if (d.user === oldUsername) d.user = newUsername; });
+                appData.leaves.forEach(l => { if (l.user === oldUsername) l.user = newUsername; });
+                appData.fines.forEach(f => { if (f.user === oldUsername) f.user = newUsername; });
+            }
+
+            currentLoggedInUser = staff;
+            localStorage.setItem('devilx_current_user', newUsername);
+            saveData();
+
+            showNotification('Berjaya', 'Profil & akaun anda telah dikemaskini.');
+            refreshAllUI();
+        }
+
+        function calculateLeaveDays() {
+            const start = document.getElementById('cutiStart').value;
+            const end = document.getElementById('cutiEnd').value;
+            if (start && end) {
+                const diffTime = new Date(end) - new Date(start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                document.getElementById('cutiTotalDays').value = diffDays > 0 ? `${diffDays} Hari` : 'Tarikh Tidak Sah';
+            }
+        }
+
+        function submitCuti(e) {
+            e.preventDefault();
+            const start = document.getElementById('cutiStart').value;
+            const end = document.getElementById('cutiEnd').value;
+            const totalDaysText = document.getElementById('cutiTotalDays').value;
+            const reason = document.getElementById('cutiReason').value;
+
+            if (totalDaysText.includes('Tidak Sah')) {
+                showNotification('Ralat', 'Sila semak tarikh mula dan akhir cuti.', true);
+                return;
+            }
+
+            appData.leaves.push({
+                id: Date.now(),
+                user: currentLoggedInUser.username,
+                start, end,
+                totalDays: parseInt(totalDaysText),
+                reason,
+                status: 'Dalam Proses'
+            });
+            saveData();
+            showNotification('Berjaya', 'Permohonan cuti anda telah dihantar.');
+            e.target.reset();
+            document.getElementById('cutiTotalDays').value = '0 Hari';
+            renderMyLogs(currentLoggedInUser.username);
+        }
+
+        function submitDuty(e) {
+            e.preventDefault();
+            const date = document.getElementById('dutyDate').value;
+            const timeStart = document.getElementById('dutyTimeStart').value;
+            const timeEnd = document.getElementById('dutyTimeEnd').value;
+            const activity = document.getElementById('dutyActivity').value;
+
+            appData.duties.unshift({
+                id: Date.now(),
+                user: currentLoggedInUser.username,
+                date, timeStart, timeEnd, activity
+            });
+
+            appData.fines = appData.fines.filter(f => !(String(f.user).toLowerCase() === currentLoggedInUser.username && f.date === date));
+            saveData();
+
+            showNotification('Berjaya', 'Log duty telah dihantar.');
+            e.target.reset();
+            renderMyLogs(currentLoggedInUser.username);
+        }
+
+        function renderMyLogs(username) {
+            cleanupOrphanedData();
+            const tbody = document.getElementById('myLogsTableBody');
+            tbody.innerHTML = '';
+
+            const userLeaves = appData.leaves.filter(l => String(l.user).toLowerCase() === username);
+            const userDuties = appData.duties.filter(d => String(d.user).toLowerCase() === username);
+
+            if (userLeaves.length === 0 && userDuties.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-500">Tiada rekod tugas atau cuti.</td></tr>`;
+                return;
+            }
+
+            userLeaves.forEach(l => {
+                let badge = l.status === 'Diluluskan' ? '<span class="text-green-400 font-bold">Diluluskan</span>' : (l.status === 'Ditolak' ? '<span class="text-red-400 font-bold">Ditolak</span>' : '<span class="text-amber-400 font-bold">Dalam Proses</span>');
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2.5 text-amber-400 font-bold">Cuti</td>
+                        <td class="p-2.5">${l.start} - ${l.end}</td>
+                        <td class="p-2.5 text-gray-300">${l.reason}</td>
+                        <td class="p-2.5">${badge}</td>
+                    </tr>
+                `;
+            });
+
+            userDuties.forEach(d => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2.5 text-blue-400 font-bold">Log Duty</td>
+                        <td class="p-2.5">${d.date} (${d.timeStart}-${d.timeEnd})</td>
+                        <td class="p-2.5 text-gray-300">${d.activity}</td>
+                        <td class="p-2.5"><span class="text-blue-400 font-bold">Telah Direkod</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderHighTableTables() {
+            cleanupOrphanedData();
+
+            // Duty Table
+            const dutyTbody = document.getElementById('htDutyTableBody');
+            dutyTbody.innerHTML = '';
+            if (appData.duties.length === 0) {
+                dutyTbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-gray-500">Tiada rekod log duty.</td></tr>`;
+            } else {
+                appData.duties.forEach(d => {
+                    const staff = appData.staffs.find(s => s.username === d.user);
+                    const memberName = staff ? staff.name : `@${d.user}`;
+                    dutyTbody.innerHTML += `
+                        <tr>
+                            <td class="p-3 font-bold text-white">${memberName}</td>
+                            <td class="p-3 font-mono text-gray-300">${d.date}</td>
+                            <td class="p-3 font-mono text-blue-400">${d.timeStart} - ${d.timeEnd}</td>
+                            <td class="p-3 text-gray-300">${d.activity}</td>
+                            <td class="p-3">
+                                <button onclick="deleteDutyRecord(${d.id})" class="px-2 py-1 bg-red-800 hover:bg-red-700 text-white rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Cuti Table
+            const cutiTbody = document.getElementById('htCutiTableBody');
+            cutiTbody.innerHTML = '';
+            if (appData.leaves.length === 0) {
+                cutiTbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-gray-500">Tiada permohonan cuti.</td></tr>`;
+            } else {
+                appData.leaves.forEach(l => {
+                    const staff = appData.staffs.find(s => s.username === l.user);
+                    const memberName = staff ? staff.name : `@${l.user}`;
+                    cutiTbody.innerHTML += `
+                        <tr>
+                            <td class="p-3 font-bold text-white">${memberName}</td>
+                            <td class="p-3 text-gray-300">${l.start} - ${l.end} (${l.totalDays} Hari)</td>
+                            <td class="p-3 text-gray-300">${l.reason}</td>
+                            <td class="p-3 font-bold ${l.status === 'Diluluskan' ? 'text-green-400' : (l.status === 'Ditolak' ? 'text-red-400' : 'text-amber-400')}">${l.status}</td>
+                            <td class="p-3 flex gap-1">
+                                <button onclick="updateLeaveStatus(${l.id}, 'Diluluskan')" class="px-2 py-1 bg-green-700 hover:bg-green-600 text-white rounded text-xs">Lulus</button>
+                                <button onclick="updateLeaveStatus(${l.id}, 'Ditolak')" class="px-2 py-1 bg-red-700 hover:bg-red-600 text-white rounded text-xs">Tolak</button>
+                                <button onclick="deleteLeaveRecord(${l.id})" class="px-2 py-1 bg-red-800 hover:bg-red-700 text-white rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function deleteDutyRecord(id) {
+            appData.duties = appData.duties.filter(d => d.id !== id);
+            saveData();
+            renderHighTableTables();
+            renderMatrixCalendar();
+        }
+
+        function deleteLeaveRecord(id) {
+            appData.leaves = appData.leaves.filter(l => l.id !== id);
+            saveData();
+            renderHighTableTables();
+            renderMatrixCalendar();
+        }
+
+        function updateLeaveStatus(id, newStatus) {
+            const item = appData.leaves.find(l => l.id === id);
+            if (item) {
+                item.status = newStatus;
+                if (newStatus === 'Diluluskan') {
+                    appData.fines = appData.fines.filter(f => !(String(f.user).toLowerCase() === String(item.user).toLowerCase() && f.date >= item.start && f.date <= item.end));
+                }
+                saveData();
+                renderHighTableTables();
+                renderMatrixCalendar();
+                renderDendaGrid();
+            }
+        }
+
+        // PAPARAN DENDA AHLI (PERHARI & AUTO-DELETE JIKA LUNAS)
+        function triggerDendaRefresh() {
+            generateAutomaticFines();
+            renderDendaGrid();
+            showNotification('Dikemaskini', 'Senarai denda dikira semula bermula 27.10.2026.');
+        }
+
+        function renderDendaGrid() {
+            cleanupOrphanedData();
+            generateAutomaticFines();
+            const grid = document.getElementById('dendaMembersGrid');
+            grid.innerHTML = '';
+
+            appData.staffs.forEach(staff => {
+                if (staff.roles && staff.roles.includes('hightable') && !staff.roles.includes('ahli')) return;
+
+                const memberFines = appData.fines.filter(f => String(f.user).toLowerCase() === staff.username);
+                const totalAmount = memberFines.reduce((sum, f) => sum + f.amount, 0);
+
+                grid.innerHTML += `
+                    <div onclick="openDendaModal('${staff.username}')" class="p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-gray-800 cursor-pointer btn-hover-effect flex items-center justify-between">
+                        <div>
+                            <h5 class="font-bold font-heading text-white text-sm">${staff.name}</h5>
+                            <p class="text-[11px] text-gray-400 mt-0.5">${memberFines.length} Tarikh Mangkir</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold font-mono text-red-400">RM ${totalAmount}</span>
+                            <span class="block text-[10px] text-amber-400 mt-0.5 hover:underline">Butiran <i class="fa-solid fa-chevron-right text-[8px]"></i></span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openDendaModal(username) {
+            const staff = appData.staffs.find(s => s.username === username);
+            if (!staff) return;
+
+            document.getElementById('modalMemberName').textContent = `Denda: ${staff.name}`;
+            const memberFines = appData.fines.filter(f => String(f.user).toLowerCase() === username);
+            const listContainer = document.getElementById('modalDatesList');
+            listContainer.innerHTML = '';
+
+            if (memberFines.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-green-400 p-3 bg-black/40 rounded-xl text-center">Tiada tarikh mangkir duty. Rekod bersih!</p>`;
+            } else {
+                memberFines.forEach(f => {
+                    listContainer.innerHTML += `
+                        <div class="flex justify-between items-center bg-black/70 p-2.5 rounded-xl border border-gray-800 text-xs">
+                            <span class="font-mono text-gray-200"><i class="fa-solid fa-calendar-xmark text-red-400 mr-2"></i>${f.date} (RM ${f.amount})</span>
+                            <button onclick="paySingleFine('${f.id}', '${username}')" class="px-2.5 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-[10px] font-heading font-bold btn-hover-effect">Lunas & Delete</button>
+                        </div>
+                    `;
+                });
+            }
+
+            const total = memberFines.reduce((sum, f) => sum + f.amount, 0);
+            document.getElementById('modalTotalFine').textContent = `Jumlah Denda Terkumpul: RM ${total}`;
+            document.getElementById('dendaModal').classList.remove('hidden');
+        }
+
+        function closeDendaModal() {
+            document.getElementById('dendaModal').classList.add('hidden');
+        }
+
+        // MENGAPLIKASI PEMADAMAN AUTOMATIK (AUTO-DELETE) BILA TEKAN LUNAS
+        function paySingleFine(fineId, username) {
+            appData.fines = appData.fines.filter(f => f.id != fineId);
+            saveData();
+            openDendaModal(username);
+            renderDendaGrid();
+            showNotification('Lunas & Dipadam', 'Rekod denda pada tarikh tersebut telah dibuang secara automatik.');
+        }
+
+        // PENGURUSAN AHLI
+        function addNewStaff(e) {
+            e.preventDefault();
+            const name = document.getElementById('newStaffName').value.trim();
+            const username = document.getElementById('newStaffUsername').value.trim().toLowerCase();
+            const password = document.getElementById('newStaffPassword').value.trim();
+            const isAhli = document.getElementById('roleAhli').checked;
+            const isHT = document.getElementById('roleHighTable').checked;
+
+            if (appData.staffs.some(s => s.username === username)) {
+                showNotification('Ralat', 'Username telah wujud!', true);
+                return;
+            }
+
+            const roles = [];
+            if (isAhli) roles.push('ahli');
+            if (isHT) roles.push('hightable');
+
+            if (roles.length === 0) {
+                showNotification('Ralat', 'Sila pilih sekurang-kurangnya satu role!', true);
+                return;
+            }
+
+            appData.staffs.push({ name, username, password, roles });
+            saveData();
+            showNotification('Berjaya', `Ahli baharu ${name} berjaya didaftarkan.`);
+            e.target.reset();
+            document.getElementById('roleAhli').checked = true;
+            renderStaffTable();
+            renderMatrixCalendar();
+            renderDendaGrid();
+        }
+
+        function openEditModal(username) {
+            const staff = appData.staffs.find(s => s.username === username);
+            if (!staff) return;
+
+            document.getElementById('editOriginalUsername').value = staff.username;
+            document.getElementById('editStaffName').value = staff.name;
+            document.getElementById('editStaffUsername').value = staff.username;
+            document.getElementById('editStaffPassword').value = staff.password;
+
+            document.getElementById('editRoleAhli').checked = staff.roles.includes('ahli');
+            document.getElementById('editRoleHighTable').checked = staff.roles.includes('hightable');
+
+            document.getElementById('editStaffModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editStaffModal').classList.add('hidden');
+        }
+
+        function saveEditStaff(e) {
+            e.preventDefault();
+            const origUsername = document.getElementById('editOriginalUsername').value;
+            const newName = document.getElementById('editStaffName').value.trim();
+            const newUsername = document.getElementById('editStaffUsername').value.trim().toLowerCase();
+            const newPassword = document.getElementById('editStaffPassword').value.trim();
+
+            const isAhli = document.getElementById('editRoleAhli').checked;
+            const isHT = document.getElementById('editRoleHighTable').checked;
+
+            if (newUsername !== origUsername && appData.staffs.some(s => s.username === newUsername)) {
+                showNotification('Ralat', 'Username baru tersebut telah wujud!', true);
+                return;
+            }
+
+            const roles = [];
+            if (isAhli) roles.push('ahli');
+            if (isHT) roles.push('hightable');
+
+            if (roles.length === 0) {
+                showNotification('Ralat', 'Sila pilih sekurang-kurangnya 1 role!', true);
+                return;
+            }
+
+            const staff = appData.staffs.find(s => s.username === origUsername);
+            if (staff) {
+                staff.name = newName;
+                staff.username = newUsername;
+                staff.password = newPassword;
+                staff.roles = roles;
+            }
+
+            if (origUsername !== newUsername) {
+                appData.duties.forEach(d => { if (d.user === origUsername) d.user = newUsername; });
+                appData.leaves.forEach(l => { if (l.user === origUsername) l.user = newUsername; });
+                appData.fines.forEach(f => { if (f.user === origUsername) f.user = newUsername; });
+            }
+
+            saveData();
+            closeEditModal();
+            showNotification('Kemaskini Berjaya', `Data anggota ${newName} telah dikemaskini.`);
+            refreshAllUI();
+        }
+
+        function deleteStaff(username) {
+            if (!confirm(`Adakah anda pasti mahu memadam akaun @${username} dan keseluruhan rekod datanya?`)) return;
+
+            appData.staffs = appData.staffs.filter(s => s.username !== username);
+            appData.duties = appData.duties.filter(d => String(d.user).toLowerCase() !== username);
+            appData.leaves = appData.leaves.filter(l => String(l.user).toLowerCase() !== username);
+            appData.fines = appData.fines.filter(f => String(f.user).toLowerCase() !== username);
+
+            saveData();
+            showNotification('Dipadam', `Akaun @${username} telah dipadam sepenuhnya dari sistem.`);
+            refreshAllUI();
+        }
+
+        function renderStaffTable() {
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = '';
+            appData.staffs.forEach(s => {
+                let roleBadges = s.roles.map(r => {
+                    return r === 'hightable' 
+                        ? `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-950 text-amber-400 border border-amber-500 font-bold">HighTable</span>`
+                        : `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-400 border border-blue-500">Ahli</span>`;
+                }).join(' ');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-3 font-bold text-white">${s.name}</td>
+                        <td class="p-3 text-blue-400">@${s.username}</td>
+                        <td class="p-3 font-mono text-gray-300">${s.password}</td>
+                        <td class="p-3 flex gap-1">${roleBadges}</td>
+                        <td class="p-3 flex gap-1">
+                            <button onclick="openEditModal('${s.username}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-black rounded text-xs font-bold"><i class="fa-solid fa-pen"></i> Edit</button>
+                            <button onclick="deleteStaff('${s.username}')" class="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white rounded text-xs font-bold"><i class="fa-solid fa-trash"></i> Padam</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // JADUAL MATRIK (NAMA AHLI)
+        function renderMatrixCalendar() {
+            cleanupOrphanedData();
+            const year = parseInt(document.getElementById('matrixYear').value);
+            const month = parseInt(document.getElementById('matrixMonth').value);
+            const monthNames = ['', 'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+            
+            document.getElementById('matrixTitleHeader').textContent = `MATRIK TUGAS & CUTI - ${monthNames[month].toUpperCase()} ${year}`;
+
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            const headerTr = document.getElementById('matrixTableHeader');
+            let hHtml = `<th class="p-2 border border-slate-600 bg-slate-900 text-white sticky left-0 z-10 w-40">Nama Anggota</th>`;
+            for (let d = 1; d <= daysInMonth; d++) {
+                hHtml += `<th class="p-1 text-center border border-slate-600 bg-slate-900 text-white font-mono text-xs w-10">${d}</th>`;
+            }
+            headerTr.innerHTML = hHtml;
+
+            const bodyTbody = document.getElementById('matrixTableBody');
+            let bHtml = '';
+
+            appData.staffs.forEach(staff => {
+                bHtml += `<tr>`;
+                bHtml += `<td class="p-2 font-bold text-slate-900 border border-slate-300 bg-slate-100 sticky left-0 z-10 text-xs">${staff.name}</td>`;
+                
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const formattedDay = d < 10 ? '0' + d : '' + d;
+                    const formattedMonth = month < 10 ? '0' + month : '' + month;
+                    const currentDateStr = `${year}-${formattedMonth}-${formattedDay}`;
+
+                    const matchedDuties = appData.duties.filter(dt => String(dt.user).toLowerCase() === staff.username && dt.date === currentDateStr);
+                    const matchedLeave = appData.leaves.find(lv => String(lv.user).toLowerCase() === staff.username && lv.status === 'Diluluskan' && currentDateStr >= lv.start && currentDateStr <= lv.end);
+
+                    let cellItems = [];
+
+                    if (matchedLeave) {
+                        cellItems.push('<span class="text-amber-800 font-extrabold bg-amber-200 px-1 rounded text-[9px] block my-0.5">CUTI</span>');
+                    }
+
+                    if (matchedDuties.length > 0) {
+                        matchedDuties.forEach(dt => {
+                            cellItems.push(`<span class="text-blue-900 font-bold bg-blue-100 px-1 rounded text-[8px] block my-0.5 leading-tight">${dt.timeStart}-${dt.timeEnd}</span>`);
+                        });
+                    }
+
+                    let cellContent = cellItems.length > 0 ? cellItems.join('') : '-';
+
+                    bHtml += `<td class="p-0.5 text-center border border-slate-300 bg-white" title="${currentDateStr}">${cellContent}</td>`;
+                }
+                bHtml += `</tr>`;
+            });
+            bodyTbody.innerHTML = bHtml;
+        }
+
+        async function exportMatrix(format) {
+            const element = document.getElementById('matrixExportContainer');
+            showNotification('Proses Eksport', `Menjana fail ${format.toUpperCase()}...`);
+            
+            try {
+                const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
+                const imgData = canvas.toDataURL('image/png');
+
+                if (format === 'png') {
+                    const link = document.createElement('a');
+                    link.href = imgData;
+                    link.download = `DevilX_Matrix_${document.getElementById('matrixYear').value}_${document.getElementById('matrixMonth').value}.png`;
+                    link.click();
+                    showNotification('Berjaya', 'Fail PNG berjaya dimuat turun.');
+                } else {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('landscape', 'mm', 'a4');
+                    pdf.addImage(imgData, 'PNG', 10, 10, 277, (canvas.height * 277) / canvas.width);
+                    pdf.save(`DevilX_Matrix_${document.getElementById('matrixYear').value}_${document.getElementById('matrixMonth').value}.pdf`);
+                    showNotification('Berjaya', 'Fail PDF berjaya dimuat turun.');
+                }
+            } catch (err) {
+                showNotification('Ralat', 'Gagal menjana fail eksport.', true);
+            }
+        }
+
+        // Kawalan Audio Footer
+        const audio = document.getElementById('bgAudio');
+        const playIcon = document.getElementById('playIcon');
+        const progressBar = document.getElementById('progressBar');
+        const progressBarContainer = document.getElementById('progressBarContainer');
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play().then(() => {
+                    playIcon.className = "fa-solid fa-pause";
+                    document.getElementById('audioIndicator').className = "inline-block w-2 h-2 rounded-full bg-green-500 animate-ping";
+                }).catch(() => {
+                    showNotification('Info Audio', 'Sila klik butang play untuk audio.');
+                });
+            } else {
+                audio.pause();
+                playIcon.className = "fa-solid fa-play ml-0.5";
+                document.getElementById('audioIndicator').className = "inline-block w-2 h-2 rounded-full bg-red-500";
+            }
+        }
+
+        audio.addEventListener('timeupdate', () => {
+            if (audio.duration) {
+                progressBar.style.width = ((audio.currentTime / audio.duration) * 100) + '%';
+                document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
+                document.getElementById('durationTime').textContent = formatTime(audio.duration);
+            }
+        });
+
+        function seekAudio(e) {
+            const rect = progressBarContainer.getBoundingClientRect();
+            if (audio.duration) {
+                audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+            }
+        }
+
+        function formatTime(secs) {
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function changeVolume(val) {
+            audio.volume = val;
+            localStorage.setItem('devilx_volume', val);
+        }
+
+        function toggleMute() {
+            audio.muted = !audio.muted;
+            document.getElementById('volumeIcon').className = audio.muted ? "fa-solid fa-volume-xmark text-red-500" : "fa-solid fa-volume-high text-amber-400";
+        }
+    </script>
+</body>
+</html>
